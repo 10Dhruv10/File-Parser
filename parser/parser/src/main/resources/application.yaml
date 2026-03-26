@@ -1,0 +1,15 @@
+spring:
+  application:
+    name: parser
+
+  datasource:
+    url: jdbc:mysql://localhost:3306/parserDB?createDatabaseIfNotExist=true
+    username: root
+    password: root
+
+  #To increase file size limit for file upload
+  spring:
+    servlet:
+      multipart:
+        max-file-size: 50MB
+        max-request-size: 50MB
