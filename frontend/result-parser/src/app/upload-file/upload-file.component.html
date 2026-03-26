@@ -1,0 +1,73 @@
+<input type="file" multiple class="file-input" (change)="onFileUpload($event)" #fileUpload>
+
+<div class="file-upload">
+    <button mat-mini-fab color="primary" class="upload-btn" (click)="fileUpload.click()">
+        <mat-icon>attach_file</mat-icon>
+    </button>
+</div>
+
+<div>
+  <button mat-button (click)="changeIndex(-1)">
+  <mat-icon>arrow_back</mat-icon>
+  </button>
+
+<mat-form-field appearance="fill">
+  <mat-label>Enter index</mat-label>
+  <input matInput type="number" (input)="changeIndexOnSelect($event)"[value]="selectedIndex()">
+</mat-form-field>
+
+  <button mat-button (click)="changeIndex(1)">
+    <mat-icon iconPositionEnd>arrow_forward</mat-icon>
+  </button>
+</div>
+
+
+@if (filesUploaded().length > 0 && selectedIndex() < filesUploaded().length) {
+
+  @if (filesUploaded()[selectedIndex()].type.startsWith('image/')) {
+    <img [src]="filePreview()[selectedIndex()]" width="300">
+  }
+
+  @else if (filesUploaded()[selectedIndex()].type === 'application/pdf') {
+    <ngx-extended-pdf-viewer
+      [src]="filePreview()[selectedIndex()]"
+      [height]="'auto'"
+      [textLayer]="true"
+      [showHandToolButton]="true" 
+      [showPresentationModeButton]="true">
+    </ngx-extended-pdf-viewer>
+  }
+
+  @else {
+    <p>Unsupported file</p>
+  }
+}
+
+<mat-progress-bar mode="determinate" [value]="progressValue()"></mat-progress-bar>
+
+<button mat-fab extended (click)="onSubmit()">
+  Submit
+</button>
+
+
+
+<!-- 
+<div class="progress">
+
+  @if (uploadProgress) {
+    <mat-progress-bar class="progress-bar" mode="determinate" [value]="uploadProgress">
+    </mat-progress-bar>
+
+    <mat-icon class="cancel-upload" (click)="cancelUpload()">
+      delete_forever
+    </mat-icon>
+  }
+
+</div> 
+-->
+
+<!-- @if (uploadError) {
+  <p class="upload-error">{{ uploadError }}</p>
+} -->
+
+
