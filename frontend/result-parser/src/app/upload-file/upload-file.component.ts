@@ -100,12 +100,16 @@ export class UploadFileComponent {
               })
               .subscribe({ 
                 next: (event) => {
-                  console.log("1", event)
+                  
                   if (event.type === HttpEventType.UploadProgress) {
                     this.progressValue.set(Math.round(100 * event.loaded / (event.total ?? 1)));
                   }
 
-                  console.log(event);
+                  if (event.type === HttpEventType.Response) {
+                    console.log(event.body);
+                  }
+
+                  
                 },
                 error: (err) => console.log(err)
               });
