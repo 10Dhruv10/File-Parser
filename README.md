@@ -179,6 +179,7 @@ Then this extracted info will be stored under 2 tables students and subjects, Ap
 
 ## Future (To-do):
 - As of now I can upload images and preview them, but they won't be analyzed so remove that image thingy on angular side (as its only there)
+- DTO folder of springboot is not in use anymore, remove the file in it.
 - Lots of edge cases exist as of now, identify what they are.
 - Create Session for users, each session will last 15minutes and after that all the data of that job ID will be removed from DB
 - Add an AI agent to generate insights from this PDF.
