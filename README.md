@@ -1,13 +1,13 @@
 # File Parser
 
-A full-stack web application that parses university result PDFs (Savitribai Phule Pune University) and exports the extracted student data—name, PRN, SGPA, and subject-wise grades—into a downloadable Excel file.
+A full-stack web application that parses university result PDFs (Savitribai Phule Pune University) and exports the extracted student data like name, PRN, SGPA, and subject-wise grades->into a downloadable Excel file.
 
 ---
 
 ## Features
 
-- Upload one or more PDF result files via a browser-based UI
-- Preview uploaded PDFs and images directly in the browser
+- Upload one or more PDF result files via the UI
+- Preview uploaded PDFs and images directly.
 - Automatically extract student name, PRN, SGPA, and per-subject grades from each PDF
 - Export all parsed results as a single `.xlsx` file
 - Track each upload batch as a job stored in a MySQL database
@@ -19,7 +19,7 @@ A full-stack web application that parses university result PDFs (Savitribai Phul
 | Layer     | Technology                                                         |
 |-----------|--------------------------------------------------------------------|
 | Frontend  | Angular 19, Angular Material, ngx-extended-pdf-viewer              |
-| Backend   | Java 21, Spring Boot 3, Spring AI (PDF reader), Apache PDFBox      |
+| Backend   | Java 21, Spring Boot 3, Apache PDFBox      |
 | Database  | MySQL (Flyway migrations)                                          |
 | Excel     | Apache POI (OOXML)                                                 |
 | Build     | Maven (backend), npm / Angular CLI (frontend)                      |
@@ -172,3 +172,14 @@ Return .xlsx as binary response  ──▶  Browser auto-downloads results.xlsx
 | F      | Grade        |
 
 One row is written per subject per student.
+
+## Methodology
+Once user submits the PDFs, they will be saved in mysql database (tables fileJob & File) under one single jobID, all files in this jobID will then be analyzed by apache pdfBOX and this semi-structured data will be extracted and then sent for Parsing, which will be done with help of REGEX.
+Then this extracted info will be stored under 2 tables students and subjects, Apache POII will create excel file from this fresh information stored in these 2 tables.
+
+## Future (To-do):
+- As of now I can upload images and preview them, but they won't be analyzed so remove that image thingy on angular side (as its only there)
+- Lots of edge cases exist as of now, identify what they are.
+- Create Session for users, each session will last 15minutes and after that all the data of that job ID will be removed from DB
+- Add an AI agent to generate insights from this PDF.
+- Finally Deploy the project
