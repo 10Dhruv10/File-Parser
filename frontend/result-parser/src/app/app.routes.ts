@@ -9,4 +9,4 @@ export const routes: Routes = [
         component: UploadFileComponent
     }
 
-];
+]

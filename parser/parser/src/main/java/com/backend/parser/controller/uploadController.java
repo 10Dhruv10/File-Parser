@@ -6,6 +6,7 @@ import com.backend.parser.entities.Filejob;
 import com.backend.parser.repository.FileRepository;
 import com.backend.parser.repository.FilejobRepository;
 import com.backend.parser.service.PdfExtractionService;
+import com.backend.parser.service.ResultProcessingService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -23,6 +24,7 @@ public class uploadController {
     private final FilejobRepository filejobRepository;
     private final FileRepository fileRepository;
     private final PdfExtractionService pdfExtractionService;
+    private final ResultProcessingService resultProcessingService;
 
     @PostMapping("/upload")
     public ResponseEntity<?> uploadFile(
@@ -58,20 +60,12 @@ public class uploadController {
             filejobRepository.save(jobEntity);    // Save job and files in one transaction due to cascade
 
 
-//            Map<String, String> response = new HashMap<>();
-//            response.put("fileName", files.get(0).getOriginalFilename()); //bruh change this later
+            byte[] response = resultProcessingService.processResults(jobEntity.getJobId());
 
-//            UploadResponse response = new UploadResponse(
-//                    jobEntity.getJobId(),
-//                    jobEntity.getStatus(),
-//                    jobEntity.getTotalFiles()
-//            );
-
-            List<String> response = pdfExtractionService.extractTextFromAllFiles(jobEntity.getJobId());
-
-//            String pdfParsingResponse = pdfExtractionService.extractText(jobEntity.getFiles().get(0).getFileData());
-
-            return ResponseEntity.ok(Map.of("Response", response));
+        return ResponseEntity.ok()
+                .header("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+                .header("Content-Disposition", "attachment; filename=results.xlsx")
+                .body(response);
 
     }
 }

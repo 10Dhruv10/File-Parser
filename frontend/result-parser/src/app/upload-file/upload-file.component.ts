@@ -96,7 +96,8 @@ export class UploadFileComponent {
 
             this.http.post("http://localhost:8080/backendApi/upload", formData, {
                 reportProgress: true,
-                observe: 'events'
+                observe: 'events',
+                responseType: 'blob'
               })
               .subscribe({ 
                 next: (event) => {
@@ -105,10 +106,17 @@ export class UploadFileComponent {
                     this.progressValue.set(Math.round(100 * event.loaded / (event.total ?? 1)));
                   }
 
+                  
                   if (event.type === HttpEventType.Response) {
-                    console.log(event.body);
-                  }
+                    const url = URL.createObjectURL(event.body!)
 
+                    const anchor = document.createElement('a');
+                    anchor.href = url
+                    anchor.download = 'results.xlsx'
+                    anchor.click()
+
+                    URL.revokeObjectURL(url);
+                }
                   
                 },
                 error: (err) => console.log(err)
@@ -116,57 +124,15 @@ export class UploadFileComponent {
         }
        
     }
+
+
+    //When component is destroyed, revoke file URLs created for preview
+    ngOnDestroy(){
+      for (let i=0; i<this.filePreview().length; i++){
+        URL.revokeObjectURL(this.filePreview()[i]);
+      }
+    }
+
+  
 }
       
-
-      /*
-      const file = input.files?.[0];
-      this.fileType = file?.type;
-      console.log(event);
-      console.log(file);
-
-      if (!file || !(this.fileType === "image/jpeg" || this.fileType === "image/png" || this.fileType === "application/pdf")){
-        this.fileType = undefined;
-        window.alert("please enter a valid type (image/pdf)");
-        return;
-      }
-
-      this.filePreview.set(URL.createObjectURL(file));
-      this.fileUploaded.set(file);
-    }
-    */
-
-    
-   
-
-
-    
-  //   uploadProgress: number | null = null;
-  //   uploadSubscription: Subscription | null = null;
-  //   uploadError: string | null = null;
-
-  //   private http = inject(HttpClient);
-
-  //   onFileSelected(event: Event) {
-  //     const input = event.target as HTMLInputElement;
-  //     const file = input.files?.[0];
-      
-  //       if (file) {
-  //         this.uploadError = null;
-  //           this.fileName = file.name;
-  //           const formData = new FormData();
-  //           formData.append("thumbnail", file);
-
-  //       }
-  //   }
-
-  // cancelUpload() {
-  //   this.uploadSub?.unsubscribe();
-  //   this.reset();
-  // }
-
-  // reset() {
-  //   this.uploadProgress = null;
-  //   this.uploadSub = null;
-  // }
-
