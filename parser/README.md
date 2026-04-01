@@ -148,9 +148,6 @@ uploadController
   • Persists job + files in a single transaction (cascade)
         │
         ▼
-ResultProcessingService
-        │
-        ▼
 PdfExtractionService  ──▶  Apache PDFBox extracts raw text from each PDF
         │
         ▼
@@ -159,7 +156,9 @@ ResultParserService   ──▶  Regex parsing extracts:
                              • PRN (Permanent Registration Number)
                              • SGPA
                              • Subject names and grades
-                           Saves Student + Subjects entities to MySQL
+        │
+        ▼
+ResultProcessingService ──▶ Saves Student + Subjects entities to MySQL 
         │
         ▼
 CreateExcelService    ──▶  Apache POI builds a .xlsx workbook
