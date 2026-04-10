@@ -24,11 +24,7 @@
 
 @if (filesUploaded().length > 0 && selectedIndex() < filesUploaded().length) {
 
-  @if (filesUploaded()[selectedIndex()].type.startsWith('image/')) {
-    <img [src]="filePreview()[selectedIndex()]" width="300">
-  }
-
-  @else if (filesUploaded()[selectedIndex()].type === 'application/pdf') {
+  @if (filesUploaded()[selectedIndex()].type === 'application/pdf') {
     <ngx-extended-pdf-viewer
       [src]="filePreview()[selectedIndex()]"
       [height]="'auto'"

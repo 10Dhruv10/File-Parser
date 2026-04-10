@@ -1,0 +1,2 @@
+ALTER TABLE student ADD COLUMN job_id VARCHAR(255);
+

@@ -1,6 +1,5 @@
 package com.backend.parser.controller;
 
-import com.backend.parser.dto.UploadResponse;
 import com.backend.parser.entities.File;
 import com.backend.parser.entities.Filejob;
 import com.backend.parser.repository.FileRepository;
@@ -15,6 +14,9 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.IOException;
 import java.util.*;
 
+
+
+
 @AllArgsConstructor
 @RestController
 @RequestMapping(("/backendApi"))
@@ -28,11 +30,13 @@ public class uploadController {
 
     @PostMapping("/upload")
     public ResponseEntity<?> uploadFile(
-            @RequestParam("filesFromAngular") List<MultipartFile> files
-            ){
+            @RequestParam("filesFromAngular") List<MultipartFile> files){
 
             if (files.isEmpty()) {
                 return ResponseEntity.badRequest().body("No file uploaded");
+            }
+            if (files.size() > 130){
+                return ResponseEntity.badRequest().body("Too many files uploaded. Maximum allowed is 130.");
             }
 
             Filejob jobEntity = new Filejob();
@@ -42,6 +46,11 @@ public class uploadController {
             jobEntity.setFiles(new ArrayList<>());
 
             for (MultipartFile file : files) {
+                if (file.getSize() > 200 * 1024 || !pdfExtractionService.ValidatePdf(file)) {
+                    filejobRepository.delete(jobEntity);
+                    return ResponseEntity.badRequest().body("Invalid file or File Size " + file.getOriginalFilename());
+                }
+
                 File fileEntity = new File();
                 fileEntity.setFileName(file.getOriginalFilename());
                 fileEntity.setFileType(file.getContentType());

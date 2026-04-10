@@ -37,7 +37,7 @@ export class UploadFileComponent {
         for (let i=0; i<fileList.length; i++){
           const file = fileList[i];
           
-          if (!(file?.type === "image/jpeg" || file?.type === "image/png" || file?.type === "application/pdf")){
+          if (!(file?.type === "application/pdf")){
             this.fileTypeValid = false;
             window.alert("please enter a valid type (image/pdf) for ");
             break;

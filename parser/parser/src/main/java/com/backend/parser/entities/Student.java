@@ -28,4 +28,7 @@ public class Student {
     @OneToMany(mappedBy = "student", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Subjects> subjects;
 
+    @Column(name="job_id")
+    private String jobId;
+
 }

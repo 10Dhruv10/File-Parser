@@ -4,5 +4,6 @@
     <file url="file://$PROJECT_DIR$/parser/src/main/resources/db/migration/V2__add_file_table.sql" value="0bd539f6-9411-4010-a928-b009dbe3020d" />
     <file url="file://$PROJECT_DIR$/parser/src/main/resources/db/migration/V3__add_student_table.sql" value="0bd539f6-9411-4010-a928-b009dbe3020d" />
     <file url="file://$PROJECT_DIR$/parser/src/main/resources/db/migration/V4__add_subjects_table.sql" value="0bd539f6-9411-4010-a928-b009dbe3020d" />
+    <file url="file://$PROJECT_DIR$/parser/src/main/resources/db/migration/V5__add_job_id_to_student_table.sql" value="0bd539f6-9411-4010-a928-b009dbe3020d" />
   </component>
 </project>

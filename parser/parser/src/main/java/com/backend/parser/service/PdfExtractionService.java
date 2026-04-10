@@ -13,7 +13,9 @@ import lombok.Setter;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -26,6 +28,24 @@ import java.util.Optional;
 public class PdfExtractionService {
 
     private final FilejobRepository filejobRepository;
+
+    /*
+    Instead of loading entire file into memory Load the PDF as input streams ,
+    within try() load the streams so PDFs will be closed after use automatically.
+     */
+    public boolean ValidatePdf(MultipartFile file){
+
+        try(InputStream inputStream = file.getInputStream();
+            PDDocument loadedDocument = PDDocument.load(inputStream)) {
+
+            if (loadedDocument.getNumberOfPages() == 0 || loadedDocument.getNumberOfPages() > 2){
+                return false;
+            }
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
+    }
 
     public String extractText(byte[] bytes) {
         try {
