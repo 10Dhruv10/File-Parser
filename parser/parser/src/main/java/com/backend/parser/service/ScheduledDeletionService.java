@@ -19,16 +19,15 @@ public class ScheduledDeletionService {
 
         /*
          This method runs automatically every 5 minutes & deletes Filejob that are older than 30 minutes.
+
+         If any deletion fails, rollback the entire transaction to maintain data integrity, Important.
          */
-        @Scheduled(cron = "0 */1 * * * *")
-        @Transactional //If any deletion fails, rollback entire transaction to maintain data integrity, important.
+        @Scheduled(cron = "0 */5 * * * *")
+        @Transactional
         public void deleteOldFiles() {
             LocalDateTime cutoffTime = LocalDateTime.now().minusMinutes(30);
-            System.out.println(cutoffTime);
-            System.out.println(fileJobRepository.findByCreatedAtBefore(cutoffTime));
 
             for (Filejob job : fileJobRepository.findByCreatedAtBefore(cutoffTime)){
-                System.out.println("Deleting job with ID: " + job.getJobId() + " created at: " + job.getCreatedAt());
                 studentRepository.deleteByJobId(job.getJobId());
                 fileJobRepository.delete(job);
             }

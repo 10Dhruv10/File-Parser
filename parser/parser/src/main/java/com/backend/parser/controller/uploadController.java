@@ -2,10 +2,13 @@ package com.backend.parser.controller;
 
 import com.backend.parser.entities.File;
 import com.backend.parser.entities.Filejob;
+import com.backend.parser.entities.Subjects;
 import com.backend.parser.repository.FileRepository;
 import com.backend.parser.repository.FilejobRepository;
+import com.backend.parser.repository.StudentRepository;
 import com.backend.parser.service.PdfExtractionService;
 import com.backend.parser.service.ResultProcessingService;
+import com.backend.parser.service.restClientService;
 import lombok.AllArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -27,6 +30,8 @@ public class uploadController {
     private final FileRepository fileRepository;
     private final PdfExtractionService pdfExtractionService;
     private final ResultProcessingService resultProcessingService;
+    private final restClientService restClientService;
+    private StudentRepository studentRepository;
 
     @PostMapping("/upload")
     public ResponseEntity<?> uploadFile(
@@ -70,6 +75,7 @@ public class uploadController {
 
 
             byte[] response = resultProcessingService.processResults(jobEntity.getJobId());
+            initiateSendingStudentData(jobEntity.getJobId());
 
         return ResponseEntity.ok()
                 .header("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
@@ -77,4 +83,20 @@ public class uploadController {
                 .body(response);
 
     }
+
+    public void initiateSendingStudentData(String jobId){
+        Map<String, Object> studentData = new HashMap<>();
+        String name = studentRepository.findNameByJobId(jobId);
+        String prn = studentRepository.findPrnByJobId(jobId);
+        Double sgpa = studentRepository.findSgpaByJobId(jobId);
+        List<Subjects> subjects = studentRepository.findSubjectsByJobId(jobId);
+
+        studentData.put("name", name);
+        studentData.put("prn", prn);
+        studentData.put("sgpa", sgpa);
+        studentData.put("subjects", subjects);
+
+        restClientService.postStudentData(studentData);
+    }
+
 }
