@@ -6,6 +6,7 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatInputModule} from '@angular/material/input';
 import { NgxExtendedPdfViewerModule } from 'ngx-extended-pdf-viewer';
 import { finalize, Subscription } from 'rxjs';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-upload-file',
@@ -22,7 +23,8 @@ export class UploadFileComponent {
     selectedIndex = signal<number>(0);
     progressValue = signal<number>(0);
 
-    private http = inject(HttpClient);
+    private http = inject(HttpClient)
+    private router = inject(Router)
 
 
     //code for previewing files
@@ -116,12 +118,17 @@ export class UploadFileComponent {
                     anchor.click()
 
                     URL.revokeObjectURL(url);
+
+                    this.router.navigate(['/agentchat'])
                 }
                   
                 },
                 error: (err) => console.log(err)
               });
         }
+
+        //code to redirect user to '/agentchat' once upload is finished
+        this.router.navigate(['/agentchat'])
        
     }
 

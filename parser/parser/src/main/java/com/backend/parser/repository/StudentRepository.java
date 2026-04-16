@@ -9,11 +9,6 @@ import java.util.List;
 public interface StudentRepository extends JpaRepository<Student, Long> {
     void deleteByJobId(String jobId);
 
-    String findByJobId(String jobId);
-
-    String findNameByJobId(String jobId);
-    String findPrnByJobId(String jobId);
-    double findSgpaByJobId(String jobId);
-    List<Subjects> findSubjectsByJobId(String jobId);
+    List<Student> findByJobId(String jobId);
 
 }
