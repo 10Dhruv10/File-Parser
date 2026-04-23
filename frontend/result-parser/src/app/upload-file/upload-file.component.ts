@@ -7,6 +7,7 @@ import { MatInputModule} from '@angular/material/input';
 import { NgxExtendedPdfViewerModule } from 'ngx-extended-pdf-viewer';
 import { finalize, Subscription } from 'rxjs';
 import { Router } from '@angular/router';
+import { jobIdService } from './job-id.service';
 
 @Component({
   selector: 'app-upload-file',
@@ -25,6 +26,7 @@ export class UploadFileComponent {
 
     private http = inject(HttpClient)
     private router = inject(Router)
+    private jobIdService = inject(jobIdService);
 
 
     //code for previewing files
@@ -110,6 +112,19 @@ export class UploadFileComponent {
 
                   
                   if (event.type === HttpEventType.Response) {
+                    //receive jobid
+                    const jobId = event.headers.get('jobId')
+                    console.log("angular receive" + jobId)
+
+                    if (jobId){
+                      this.jobIdService.setJobId(jobId);
+                    }
+                    else{
+                      console.log("error getting jobid from backend")
+                      return
+                    }
+
+                    //download
                     const url = URL.createObjectURL(event.body!)
 
                     const anchor = document.createElement('a');
@@ -128,7 +143,7 @@ export class UploadFileComponent {
         }
 
         //code to redirect user to '/agentchat' once upload is finished
-        this.router.navigate(['/agentchat'])
+        // this.router.navigate(['/agentchat'])
        
     }
 

@@ -91,6 +91,8 @@ public class uploadController {
         return ResponseEntity.ok()
                 .header("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
                 .header("Content-Disposition", "attachment; filename=results.xlsx")
+                .header("jobId", jobEntity.getJobId())
+                .header("Access-Control-Expose-Headers", "jobId")  //it's ok for frontend to read this "jobId" header (for console.log)
                 .body(response);
     }
 
@@ -103,7 +105,7 @@ public class uploadController {
             studentData.add(convertToDTO(student));
         }
 
-        restClientService.postStudentData(studentData);
+        restClientService.postStudentData(studentData, jobId);
     }
 
     private StudentDTO convertToDTO(Student student) {

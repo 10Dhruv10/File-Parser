@@ -2,7 +2,7 @@
   <mat-form-field hintLabel="Max 50 characters">
     <mat-label>Enter some input</mat-label>
     <input matInput #input maxlength="50" placeholder="Type your query here" (input)="onInput($event)" />
-    <mat-hint align="end">{{value().length}}/10</mat-hint>
+    <mat-hint align="end">{{value().length}}/50</mat-hint>
 
     <button mat-button (click)="sendMessage()">    
        Send 
@@ -11,5 +11,5 @@
   </mat-form-field>
 </div>
 
-
-    
+<div [innerHTML] = "getFormattedReply()">
+</div>

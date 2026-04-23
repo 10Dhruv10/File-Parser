@@ -3,6 +3,8 @@ import { MatFormField, MatInputModule } from "@angular/material/input";
 import { MatIcon } from "@angular/material/icon";
 import { MatButton } from "@angular/material/button";
 import { HttpClient } from '@angular/common/http';
+import { jobIdService } from '../upload-file/job-id.service';
+import { marked } from 'marked';
 
 @Component({
   selector: 'app-agent-chat',
@@ -13,6 +15,8 @@ import { HttpClient } from '@angular/common/http';
 export class AgentChatComponent {
   value = signal<string>('');
   private http = inject(HttpClient)
+  private jobIdService = inject(jobIdService)
+  fastApiResponse : string = ''
 
   onInput(event: Event){
     const input = event.target as HTMLInputElement
@@ -20,10 +24,21 @@ export class AgentChatComponent {
   }
 
   sendMessage(){
+    const jobId = this.jobIdService.getJobId();
+    console.log(jobId)
+
+    if (!jobId) {
+      console.error("jobId missing");
+      return;
+    }
+
     if (this.value()!=''){
-      this.http.post("http://127.0.0.1:8000/chat", {text: this.value()})
+      this.http.post("http://127.0.0.1:8000/chat", {jobId: jobId, text: this.value()})
         .subscribe({
-          next: (event) => {console.log(event)},
+          next: (event: any) => {
+            this.fastApiResponse = event.reply
+            console.log(event)
+          },
           error: (err) => {console.log(err)}
         })
     }
@@ -31,6 +46,11 @@ export class AgentChatComponent {
     console.log(this.value())
     this.value.set('')
 
+  }
+
+
+  getFormattedReply() {
+    return marked(this.fastApiResponse);
   }
 
 }
