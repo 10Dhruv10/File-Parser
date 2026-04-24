@@ -304,3 +304,12 @@ One row per **subject per student**.
 - Backend currently processes PDFs; frontend rejects non-PDF during upload validation.
 - The AI Agent requires an active Redis instance and a valid `GEMINI_API_KEY` to function.
 - Student data in Redis expires after 30 minutes, matching the MySQL cleanup interval.
+
+## Future
+
+- Add Tesseract OCR in Springboot as a fallback scanner if apache pdf box fails to extract pdf.
+- Improve AgentChat Side UI
+- Strictly reinforce tool calling on gemini side.
+- User Guide Manual
+- Deployment on Render
+- Error Component in Angular Side (Error management for edge cases)
