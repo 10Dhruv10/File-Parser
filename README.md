@@ -1,6 +1,6 @@
 # File Parser
 
-A full-stack web application that parses Savitribai Phule Pune University result PDFs, stores structured student records, generates downloadable Excel files, and forwards processed student data to a local AI/agent endpoint.
+A full-stack web application that parses Savitribai Phule Pune University result PDFs, stores structured student records, generates downloadable Excel files, and provides an AI-powered chat interface to query the parsed data.
 
 ---
 
@@ -25,7 +25,11 @@ A full-stack web application that parses Savitribai Phule Pune University result
   - Subject rows (`Subjects`)
 - Export parsed data as a single `.xlsx` file
 - Return `jobId` in response headers for frontend usage
-- Send parsed student JSON payload to local endpoint: `http://127.0.0.1:8000/studentData`
+- Send parsed student JSON payload to the AI Agent: `http://127.0.0.1:8000/studentData`
+- AI Agent stores student data in Redis (TTL: 30 minutes) keyed by `jobId`
+- AI-powered chat interface (post-upload) backed by Google Gemini (`gemini-2.5-flash`) with function-calling support
+  - `get_top_students(n)` tool: returns the top *n* students sorted by SGPA descending
+  - Gemini responses rendered as formatted Markdown in the Angular chat UI
 - Scheduled cleanup removes stale jobs and associated student records every 5 minutes (older than 30 minutes)
 
 ---
@@ -34,11 +38,13 @@ A full-stack web application that parses Savitribai Phule Pune University result
 
 | Layer     | Technology |
 |-----------|------------|
-| Frontend  | Angular 19, Angular Material, ngx-extended-pdf-viewer |
+| Frontend  | Angular 19, Angular Material, ngx-extended-pdf-viewer, marked |
 | Backend   | Java 21, Spring Boot 3, Apache PDFBox |
+| AI Agent  | Python 3, FastAPI, Google Gemini (`google-genai`), Redis |
 | Database  | MySQL with Flyway migrations |
+| Cache     | Redis (student data per job, 30-minute TTL) |
 | Excel     | Apache POI (XSSF) |
-| Build     | Maven (backend), npm / Angular CLI (frontend) |
+| Build     | Maven (backend), npm / Angular CLI (frontend), uvicorn (AI Agent) |
 
 ---
 
@@ -50,8 +56,8 @@ File-Parser/
 │   └── result-parser/
 │       └── src/app/
 │           ├── upload-file/      # Upload UI + PDF preview + submit/download
-│           ├── agent-chat/       # Chat/agent screen (navigated to after upload)
-│           └── service/          # Shared services (e.g., jobId service)
+│           │   └── job-id.service.ts  # Shared jobId signal service
+│           └── agent-chat/       # AI chat UI (navigated to after upload)
 ├── parser/
 │   └── parser/
 │       └── src/main/
@@ -65,7 +71,7 @@ File-Parser/
 │               ├── application.yaml
 │               └── db/migration/ # Flyway SQL scripts
 └── Ai Agent/
-    └── ...                       # Additional AI/agent-related code/resources
+    └── main.py                   # FastAPI server: /studentData + /chat endpoints
 ```
 
 ---
@@ -77,6 +83,9 @@ File-Parser/
 - **Node.js 18+** and **npm**
 - **Angular CLI** (`npm install -g @angular/cli`)
 - **MySQL** running on `localhost:3306`
+- **Python 3.10+** and **pip**
+- **Redis** running on `localhost:6379`
+- **Google Gemini API key** (set as `GEMINI_API_KEY` environment variable)
 
 ---
 
@@ -105,7 +114,30 @@ cd parser/parser
 
 Backend URL: `http://localhost:8080`
 
-### 3) Frontend (Angular)
+### 3) AI Agent (FastAPI)
+
+```bash
+cd "Ai Agent"
+pip install fastapi uvicorn google-genai redis python-dotenv
+```
+
+Create a `.env` file in the `Ai Agent/` directory:
+
+```env
+GEMINI_API_KEY=your_google_gemini_api_key_here
+```
+
+Start the agent:
+
+```bash
+python main.py
+```
+
+AI Agent URL: `http://127.0.0.1:8000`
+
+> **Note:** Redis must be running on `localhost:6379` before starting the AI Agent.
+
+### 4) Frontend (Angular)
 
 ```bash
 cd frontend/result-parser
@@ -126,14 +158,16 @@ Frontend URL: `http://localhost:4200`
 5. Upload progress is shown in a progress bar.
 6. On completion:
    - `results.xlsx` is downloaded automatically
-   - frontend stores `jobId` from response header
+   - Frontend stores `jobId` from response header
    - UI navigates to `/agentchat`
+7. In the chat screen, type natural-language queries about the uploaded student data (e.g., *"Who are the top 5 students?"*).
+8. The AI Agent uses Google Gemini with function-calling to answer questions and returns formatted Markdown replies.
 
 ---
 
 ## API
 
-### `POST /backendApi/upload`
+### Spring Boot — `POST /backendApi/upload`
 
 Accepts multiple files using `multipart/form-data`.
 
@@ -150,6 +184,60 @@ Accepts multiple files using `multipart/form-data`.
 - Content-Disposition: `attachment; filename=results.xlsx`
 - Header: `jobId: <generated-uuid>`
 - Body: generated `.xlsx` bytes
+
+---
+
+### AI Agent — `POST /studentData`
+
+Receives parsed student data from Spring Boot and stores it in Redis.
+
+**Request body**
+
+```json
+{
+  "jobId": "<uuid>",
+  "students": [
+    {
+      "name": "Student Name",
+      "prn": "123456789",
+      "sgpa": 8.5,
+      "subjects": [
+        { "subjectName": "Mathematics", "grade": "O" }
+      ]
+    }
+  ]
+}
+```
+
+**Response**
+
+```json
+{ "received jobId: ": "<uuid>" }
+```
+
+---
+
+### AI Agent — `POST /chat`
+
+Accepts a natural-language prompt from the Angular chat UI and returns a Gemini-generated reply.
+
+**Request body**
+
+```json
+{
+  "jobId": "<uuid>",
+  "text": "Who are the top 3 students?"
+}
+```
+
+**Response**
+
+```json
+{ "reply": "Here are the top 3 students by SGPA: ..." }
+```
+
+- Returns `404` if the `jobId` is not found in Redis (data expired or never received).
+- Gemini may invoke the `get_top_students(n)` tool internally before producing a final answer.
 
 ---
 
@@ -174,6 +262,18 @@ Return Excel response + jobId header
    │
    └─ initiateSendingStudentData(jobId)
        └─ restClientService -> POST http://127.0.0.1:8000/studentData
+                                   │
+                                   └─ Store in Redis (key=jobId, TTL=1800s)
+
+Angular navigates to /agentchat
+   │
+   ▼
+User types query -> POST http://127.0.0.1:8000/chat
+   │
+   ├─ Load student data from Redis by jobId
+   ├─ Send prompt + student context to Gemini (gemini-2.5-flash)
+   ├─ Gemini may call get_top_students(n) tool
+   └─ Return final Markdown reply to Angular
 ```
 
 ---
@@ -194,7 +294,7 @@ One row per **subject per student**.
 
 ## Scheduled Cleanup
 
-`ScheduledDeletionService` runs every 5 minutes and deletes jobs older than 30 minutes, along with associated student data, to keep the database clean.
+`ScheduledDeletionService` runs every 5 minutes and deletes jobs older than 30 minutes, along with associated student data, to keep the database clean. Redis entries expire automatically after 30 minutes via TTL.
 
 ---
 
@@ -202,3 +302,5 @@ One row per **subject per student**.
 
 - This parser is tailored to the current SPPU result PDF layout. Regex rules may need updates if the university changes result formatting.
 - Backend currently processes PDFs; frontend rejects non-PDF during upload validation.
+- The AI Agent requires an active Redis instance and a valid `GEMINI_API_KEY` to function.
+- Student data in Redis expires after 30 minutes, matching the MySQL cleanup interval.
